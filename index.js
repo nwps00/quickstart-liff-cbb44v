@@ -37,6 +37,28 @@ async function main() {
       break;
   }
   getUserProfile();
+  if (!liff.isInClient()) {
+    if (liff.isLoggedIn()) {
+      btnLogIn.style.display = 'none';
+      btnLogOut.style.display = 'block';
+      getUserProfile();
+      getFriendship();
+      btnShare.style.display = 'block';
+    } else {
+      btnLogIn.style.display = 'block';
+      btnLogOut.style.display = 'none';
+    }
+  } else {
+    btnSend.style.display = 'block';
+    btnShare.style.display = 'block';
+    getUserProfile();
+    getFriendship();
+  }
+  if (liff.isInClient() && liff.getOS() === 'android') {
+    //avaliable only on android
+    btnScanCode.style.display = 'block';
+  }
+  btnOpenWindow.style.display = 'block';
 }
 main();
 
@@ -48,3 +70,62 @@ async function getUserProfile() {
   displayName.innerHTML = '<b>displayName:</b> ' + profile.displayName;
   email.innerHTML = '<b>email:</b> ' + liff.getDecodedIDToken().email;
 }
+async function sendMsg() {
+  if (
+    liff.getContext().type !== 'none' &&
+    liff.getContext().type !== 'external'
+  ) {
+    await liff.sendMessages([
+      {
+        type: 'text',
+        text: 'This message was sent by sendMessages()',
+      },
+    ]);
+    liff.closeWindow();
+  }
+}
+async function shareMsg() {
+  await liff.shareTargetPicker([
+    {
+      type: 'image',
+      originalContentUrl: 'https://d.line-scdn.net/stf/line-lp/2016_en_02.jpg',
+      previewImageUrl: 'https://d.line-scdn.net/stf/line-lp/2016_en_02.jpg',
+    },
+  ]);
+}
+async function scanCode() {
+  const result = await liff.scanCode();
+  code.innerHTML = '<b>Code: </b>' + result.value;
+}
+async function getFriendship() {
+  let msg = 'Hooray! You and our chatbot are friend.';
+  const friend = await liff.getFriendship();
+  if (!friend.friendFlag) {
+    msg =
+      '<a href="https://line.me/R/ti/p/@BOT-ID">Follow our chatbot here!</a>';
+  }
+  friendShip.innerHTML = msg;
+}
+
+btnLogIn.onclick = () => {
+  liff.login();
+};
+btnLogOut.onclick = () => {
+  liff.logout();
+  window.location.reload();
+};
+btnSend.onclick = () => {
+  sendMsg();
+};
+btnShare.onclick = () => {
+  shareMsg();
+};
+btnScanCode.onclick = () => {
+  scanCode();
+};
+btnOpenWindow.onclick = () => {
+  liff.openWindow({
+    url: window.location.href,
+    external: true,
+  });
+};
